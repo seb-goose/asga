@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { ContentstackClient } from "@/lib/contentstack-client";
+import { createClient } from "@/lib/supabase/client";
 
 const HEADER_REFERENCES = [
   "buttons.page",
@@ -19,8 +21,12 @@ const toSocialHref = (url) => {
 };
 
 export default function Header({ locale }) {
+  const router = useRouter();
   const [entry, setEntry] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [member, setMember] = useState(null);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +43,64 @@ export default function Header({ locale }) {
 
     ContentstackClient.onEntryChange(fetchData);
   }, [locale]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    let active = true;
+
+    const loadMember = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        if (active) setMember(null);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("members")
+        .select("first_name")
+        .eq("id", user.id)
+        .single();
+
+      if (active) setMember(data);
+    };
+
+    loadMember();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      loadMember();
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [accountMenuOpen]);
+
+  const handleSignOut = async () => {
+    setAccountMenuOpen(false);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   const logo = entry?.logo;
   const titleLines = entry?.title_text ? entry.title_text.split("\n") : [];
@@ -105,10 +169,45 @@ export default function Header({ locale }) {
                   {entry.contact.link_text}
                 </Link>
               )}
-              {entry?.login && (
-                <Link href="/login" className="hover:text-heritage-gold">
-                  {entry.login}
-                </Link>
+              {member ? (
+                <div className="relative" ref={accountMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setAccountMenuOpen((prev) => !prev)}
+                    aria-expanded={accountMenuOpen}
+                    aria-haspopup="true"
+                    className="flex items-center gap-1 hover:text-heritage-gold"
+                  >
+                    Welcome {member.first_name}
+                    <ChevronDownIcon
+                      className={`h-3 w-3 opacity-80 ${accountMenuOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {accountMenuOpen && (
+                    <div className="absolute right-0 top-full z-20 mt-2 min-w-40 border border-stone-gray bg-white py-1 shadow-lg">
+                      <Link
+                        href="/account"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-heritage-navy hover:bg-warm-cream"
+                      >
+                        Account
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="block w-full px-4 py-2 text-left text-sm text-heritage-navy hover:bg-warm-cream"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                entry?.login && (
+                  <Link href="/login" className="hover:text-heritage-gold">
+                    {entry.login}
+                  </Link>
+                )
               )}
               <div className="flex items-center gap-1.5">
                 {socialLinks.map(({ label, href, Icon }) => (

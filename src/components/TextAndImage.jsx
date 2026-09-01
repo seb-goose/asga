@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cslp } from "@/lib/contentstack-client";
 
 const pageHref = (page) => page?.[0]?.url || "#";
 
@@ -22,6 +23,7 @@ export default function TextAndImage({ data }) {
 
   return (
     <section
+      {...data.$?.background_color}
       style={{
         "--section-bg": background_color?.hex,
         "--headline-color": headline_text_color?.hex,
@@ -33,7 +35,15 @@ export default function TextAndImage({ data }) {
         <div
           className={`relative h-80 overflow-hidden lg:h-auto ${image_right ? "lg:order-2" : ""}`}
         >
-          {image?.url && <Image src={image.url} alt="" fill className="object-cover" />}
+          {image?.url && (
+            <Image
+              src={image.url}
+              alt=""
+              fill
+              className="object-cover"
+              {...data.$?.image}
+            />
+          )}
           <div
             className={`absolute inset-0 ${
               image_right
@@ -48,7 +58,10 @@ export default function TextAndImage({ data }) {
             {headline_decoration && (
               <span className="h-px w-12 bg-(--headline-color)/60" />
             )}
-            <h2 className="font-heading text-2xl tracking-widest text-(--headline-color) uppercase">
+            <h2
+              {...data.$?.headline}
+              className="font-heading text-2xl tracking-widest text-(--headline-color) uppercase"
+            >
               {headline}
             </h2>
             {headline_decoration && (
@@ -57,17 +70,30 @@ export default function TextAndImage({ data }) {
           </div>
 
           {body && (
-            <p className="font-body mx-auto mt-6 max-w-xl text-lg text-(--body-color)">
+            <p
+              {...data.$?.body}
+              className="font-body mx-auto mt-6 max-w-xl text-lg text-(--body-color)"
+            >
               {body}
             </p>
           )}
 
           {checked_items.length > 0 && (
-            <div className="mx-auto mt-8 grid grid-cols-2 grid-rows-3 grid-flow-col gap-x-10 gap-y-4">
+            <div
+              {...data.$?.checked_items}
+              className="mx-auto mt-8 grid grid-cols-2 grid-rows-3 grid-flow-col gap-x-10 gap-y-4"
+            >
               {checked_items.map((point, index) => (
-                <div key={point._metadata?.uid ?? index} className="flex items-center gap-3">
+                <div
+                  key={point._metadata?.uid ?? index}
+                  {...cslp(data, "checked_items__", index)}
+                  className="flex items-center gap-3"
+                >
                   <CheckIcon className="h-5 w-5 shrink-0 text-(--headline-color)" />
-                  <span className="font-body text-left text-(--body-color)">
+                  <span
+                    {...point.$?.text}
+                    className="font-body text-left text-(--body-color)"
+                  >
                     {point.text}
                   </span>
                 </div>
@@ -79,6 +105,7 @@ export default function TextAndImage({ data }) {
             <div className="mt-10 flex justify-center">
               <Link
                 href={pageHref(page)}
+                {...data.$?.button_text}
                 className="border border-(--headline-color) px-8 py-3 text-sm font-bold tracking-wider text-(--headline-color) uppercase hover:bg-(--headline-color) hover:text-(--section-bg)"
               >
                 {button_text}

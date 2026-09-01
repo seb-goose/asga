@@ -45,7 +45,7 @@ export default async function RootLayout({
     <DataContextProvider data={data}>
       <Header locale={locale} />
       {children}
-      <Footer />
+      <Footer locale={locale} />
     </DataContextProvider>
   );
 }

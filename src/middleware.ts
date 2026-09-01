@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { initializePersonalize } from './lib/cspersonalize';
+import { updateSession } from './lib/supabase/middleware';
 
 const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
@@ -11,7 +12,22 @@ const intlMiddleware = createMiddleware({
   //localeDetection: false
 });
 
+// Copies the refreshed Supabase auth cookies onto whichever response the
+// rest of the middleware chain ends up producing.
+function withSupabaseCookies(response: NextResponse, supabaseResponse: NextResponse) {
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+  return response;
+}
+
 export default async function middleware(req: NextRequest) {
+  if (req.nextUrl.pathname.startsWith('/auth')) {
+    return await updateSession(req);
+  }
+
+  const supabaseResponse = await updateSession(req);
+
   if (!process.env.HOSTING || (process.env.HOSTING && process.env.HOSTING !== 'launch')) {
     const projectUid = process.env.CONTENTSTACK_PERSONALIZATION as string;
 
@@ -25,7 +41,7 @@ export default async function middleware(req: NextRequest) {
       newReq.headers.set('x-personalize-variants', variantParam || '');
       const response = intlMiddleware(newReq);
       personalize?.addStateToResponse(response);
-      return response;
+      return withSupabaseCookies(response, supabaseResponse);
     }
 
 
@@ -44,15 +60,15 @@ export default async function middleware(req: NextRequest) {
     personalize?.addStateToResponse(response);
 
 
-    return response;
-    
+    return withSupabaseCookies(response, supabaseResponse);
+
   }
 
   if (req.nextUrl.pathname.startsWith('/api')) {
-    return NextResponse.next();
+    return withSupabaseCookies(NextResponse.next(), supabaseResponse);
   }
 
-  return intlMiddleware(req);
+  return withSupabaseCookies(intlMiddleware(req), supabaseResponse);
 }
 
 export const config = {

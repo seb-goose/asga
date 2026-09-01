@@ -2,15 +2,16 @@
 import Contentstack from 'contentstack';
 import { inLivePreview } from '@/utils/lp';
 import {addEditableTags} from '@contentstack/utils';
+import { resolveContentstackLocale } from './locale';
 
 const Stack = Contentstack.Stack({
-    api_key: '',
-    delivery_token: '',
-    environment: '',
-    branch: '',
+    api_key: process.env.CONTENTSTACK_API_KEY,
+    delivery_token: process.env.CONTENTSTACK_DELIVERY_TOKEN,
+    environment: process.env.CONTENTSTACK_ENVIRONMENT,
+    branch: process.env.CONTENTSTACK_BRANCH ? process.env.CONTENTSTACK_BRANCH : 'main',
     host: process.env.CONTENTSTACK_HOST || 'cdn.contentstack.io',
     live_preview: {
-        preview_token: '',
+        preview_token: process.env.CONTENTSTACK_PREVIEW_TOKEN,
         enable: true,
         host: process.env.CONTENTSTACK_PREVIEW_HOST || 'rest-preview.contentstack.com',
     },
@@ -94,7 +95,7 @@ export const ContentstackClient = {
             }
         }
         if (data && inLivePreview())
-            addEditableTags(data, type, true, locale);
+            addEditableTags(data, type, true, resolveContentstackLocale(locale));
         return data;
     },
 
@@ -121,7 +122,7 @@ export const ContentstackClient = {
             }
         }
         if (data && inLivePreview())
-            addEditableTags(data, type, true, locale);
+            addEditableTags(data, type, true, resolveContentstackLocale(locale));
         return data;
     },
 
@@ -148,7 +149,7 @@ export const ContentstackClient = {
             }
         }
         if (data && inLivePreview() && data?.[0])
-            addEditableTags(data[0], type, true, locale);
+            addEditableTags(data[0], type, true, resolveContentstackLocale(locale));
         return data;
     },
 
@@ -175,14 +176,14 @@ export const ContentstackClient = {
             }
         }
         if (data && inLivePreview() && data?.[0])
-            addEditableTags(data[0], type, true, locale);
+            addEditableTags(data[0], type, true, resolveContentstackLocale(locale));
         return data;
     },
 
     getElementByType: async function (type, locale, initialData) {
         const searchQueryParams = getSearchQueryParams();
         if (inLivePreview() && !(searchQueryParams.live_preview || searchQueryParams.hash)) {
-            while (!ContentstackLivePreview?.hash) {
+            while (!Stack.live_preview?.hash) {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
         }
@@ -203,7 +204,7 @@ export const ContentstackClient = {
         }
         if (data && inLivePreview()) {
             for (let i = 0; i < data.length; i++) {
-                addEditableTags(data[i], type, true, locale);
+                addEditableTags(data[i], type, true, resolveContentstackLocale(locale));
             }
         }
         return data;
@@ -233,7 +234,7 @@ export const ContentstackClient = {
         }
         if (data && inLivePreview()) {
             for (let i = 0; i < data.length; i++) {
-                addEditableTags(data[i], type, true, locale);
+                addEditableTags(data[i], type, true, resolveContentstackLocale(locale));
             }
         }
         return data;
@@ -263,7 +264,7 @@ export const ContentstackClient = {
         }
         if (data && inLivePreview()) {
             for (let i = 0; i < data.length; i++) {
-                addEditableTags(data[i], type, true, locale);
+                addEditableTags(data[i], type, true, resolveContentstackLocale(locale));
             }
         }
         return data;
@@ -292,7 +293,7 @@ export const ContentstackClient = {
             }
         }
         if (data && inLivePreview() && data?.[0])
-            addEditableTags(data[0], type, true, locale);
+            addEditableTags(data[0], type, true, resolveContentstackLocale(locale));
         return data;
     },
 
@@ -318,7 +319,7 @@ export const ContentstackClient = {
             }
         }
         if (data && inLivePreview() && data?.[0])
-            addEditableTags(data[0], type, true, locale);
+            addEditableTags(data[0], type, true, resolveContentstackLocale(locale));
         return data;
     },
 
@@ -346,7 +347,7 @@ export const ContentstackClient = {
         }
         if (data && inLivePreview()) {
             for (let i = 0; i < data[0].length; i++) {
-                addEditableTags(data[0][i], type, true, locale);
+                addEditableTags(data[0][i], type, true, resolveContentstackLocale(locale));
             }
         }
         return data;

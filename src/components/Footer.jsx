@@ -1,85 +1,115 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment, useEffect, useState } from "react";
+import { ContentstackClient } from "@/lib/contentstack-client";
 
-const LOGO_URL =
-  "https://images.contentstack.io/v3/assets/blt952383dd64c12cac/bltb8e63adc50e49ce0/69d2c5761604ee7ef1875789/metal_logo.avif";
+const FOOTER_REFERENCES = ["link_columns.links.page"];
 
-const EXPLORE_LINKS = [
-  { label: "Education", href: "/education" },
-  { label: "Breeders Directory", href: "/breeders/directory" },
-  { label: "International", href: "/international" },
-  { label: "Videos", href: "/videos" },
-  { label: "Calendar", href: "/calendar" },
-];
+const pageHref = (page) => page?.[0]?.url || "#";
 
-const ASSOCIATION_LINKS = [
-  { label: "Membership", href: "/members" },
-  { label: "Club Documents", href: "/documents" },
-  { label: "Newsletter", href: "/newsletter" },
-  { label: "Merchandise", href: "/merchandise" },
-  { label: "FAQ", href: "/faq" },
-];
+const toSocialHref = (url) => {
+  if (!url) return null;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+};
 
-const RESOURCE_LINKS = [
-  { label: "Health & Testing", href: "/health-and-testing" },
-  { label: "Youth Program", href: "/youth-program" },
-  { label: "Photo Gallery", href: "/photo-gallery" },
-  { label: "Donate", href: "/donate" },
-];
+const SOCIAL_ICONS = {
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
+};
 
-const SOCIAL_LINKS = [
-  { label: "Facebook", href: "https://facebook.com", Icon: FacebookIcon },
-  { label: "Instagram", href: "https://instagram.com", Icon: InstagramIcon },
-];
+export default function Footer({ locale }) {
+  const [entry, setEntry] = useState(null);
 
-export default function Footer() {
+  useEffect(() => {
+    const fetchData = async () => {
+      // footer content is scoped independently, so it can't reuse the
+      // homepage-typed initialData from DataContext - always hit the API.
+      const data = await ContentstackClient.getElementByTypeWithRefs(
+        "footer",
+        locale,
+        FOOTER_REFERENCES,
+        null,
+      );
+      setEntry(data?.[0] ?? null);
+    };
+
+    ContentstackClient.onEntryChange(fetchData);
+  }, [locale]);
+
+  const logo = entry?.logo;
+  const nonprofitLines = entry?.nonprofit_text ? entry.nonprofit_text.split("\n") : [];
+  const linkColumns = entry?.link_columns ?? [];
+  const socialLinks = (entry?.social ?? [])
+    .map((item) => ({
+      label: item.title,
+      href: toSocialHref(item.href),
+      Icon: SOCIAL_ICONS[item.title?.toLowerCase()] ?? null,
+    }))
+    .filter((item) => item.href);
+
   return (
     <footer className="bg-heritage-navy text-warm-cream">
       <div className="mx-auto max-w-7xl px-6 pt-16 pb-8 lg:px-10">
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:grid-cols-5">
           <div className="col-span-2 flex items-start gap-5 sm:col-span-3 lg:col-span-2">
-            <Image
-              src={LOGO_URL}
-              alt="American Sebastopol Goose Association"
-              width={112}
-              height={112}
-              className="h-24 w-24 shrink-0"
-            />
+            {logo?.url && (
+              <Image
+                src={logo.url}
+                alt={entry?.business_name || logo.title || ""}
+                width={112}
+                height={112}
+                className="h-24 w-24 shrink-0"
+              />
+            )}
             <div>
-              <Link
-                href="/"
-                className="font-heading text-sm leading-tight font-bold uppercase"
-              >
-                American Sebastopol
-                <br />
-                Goose Association
-              </Link>
-              <p className="font-body mt-4 text-sm text-warm-cream/70">
-                A 501(c)(3) Nonprofit Organization
-              </p>
-              <p className="font-body text-sm text-warm-cream/70">
-                EIN: 99-99999999
-              </p>
+              {entry?.business_name && (
+                <Link
+                  href="/"
+                  className="font-heading text-sm leading-tight font-bold uppercase"
+                >
+                  {entry.business_name}
+                </Link>
+              )}
+              {nonprofitLines.length > 0 && (
+                <p className="font-body mt-4 text-sm leading-relaxed text-warm-cream/70">
+                  {nonprofitLines.map((line, index) => (
+                    <Fragment key={index}>
+                      {line}
+                      {index < nonprofitLines.length - 1 && <br />}
+                    </Fragment>
+                  ))}
+                </p>
+              )}
             </div>
           </div>
 
-          <FooterColumn title="Explore" links={EXPLORE_LINKS} />
-          <FooterColumn title="Association" links={ASSOCIATION_LINKS} />
-          <FooterColumn title="Resources" links={RESOURCE_LINKS} />
+          {linkColumns.map((column, index) => (
+            <FooterColumn
+              key={column._metadata?.uid ?? index}
+              title={column.title}
+              links={column.links ?? []}
+            />
+          ))}
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4 border-t border-warm-cream/10 pt-8 text-center">
-          <p className="font-heading text-sm font-bold tracking-wide text-heritage-gold uppercase">
-            Connect With Us
-          </p>
-          <a
-            href="mailto:info@americansebastopolgoose.org"
-            className="text-sm text-warm-cream/80 hover:text-heritage-gold"
-          >
-            info@americansebastopolgoose.org
-          </a>
+          {entry?.contact_text && (
+            <p className="font-heading text-sm font-bold tracking-wide text-heritage-gold uppercase">
+              {entry.contact_text}
+            </p>
+          )}
+          {entry?.contact_email && (
+            <a
+              href={`mailto:${entry.contact_email}`}
+              className="text-sm text-warm-cream/80 hover:text-heritage-gold"
+            >
+              {entry.contact_email}
+            </a>
+          )}
           <div className="flex items-center gap-4">
-            {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+            {socialLinks.map(({ label, href, Icon }) => (
               <a
                 key={label}
                 href={href}
@@ -88,35 +118,40 @@ export default function Footer() {
                 rel="noreferrer"
                 className="text-warm-cream/80 hover:text-heritage-gold"
               >
-                <Icon className="h-8 w-8" />
+                {Icon ? <Icon className="h-8 w-8" /> : label}
               </a>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="border-t border-warm-cream/10 px-6 py-6 text-center text-xs text-warm-cream/50">
-        © {new Date().getFullYear()} American Sebastopol Goose Association.
-        All rights reserved.
-      </div>
+      {entry?.legal && (
+        <div className="border-t border-warm-cream/10 px-6 py-6 text-center text-xs text-warm-cream/50">
+          {entry.legal}
+        </div>
+      )}
     </footer>
   );
 }
 
 function FooterColumn({ title, links }) {
+  if (!title && !links.length) return null;
+
   return (
     <div>
-      <p className="font-heading text-sm font-bold tracking-wide text-heritage-gold uppercase">
-        {title}
-      </p>
+      {title && (
+        <p className="font-heading text-sm font-bold tracking-wide text-heritage-gold uppercase">
+          {title}
+        </p>
+      )}
       <ul className="mt-4 space-y-2">
-        {links.map(({ label, href }) => (
-          <li key={label}>
+        {links.map((link, index) => (
+          <li key={link._metadata?.uid ?? index}>
             <Link
-              href={href}
+              href={pageHref(link.page)}
               className="font-body text-sm text-warm-cream/80 hover:text-heritage-gold"
             >
-              {label}
+              {link.text}
             </Link>
           </li>
         ))}

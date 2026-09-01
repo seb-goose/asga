@@ -1,14 +1,5 @@
 import contentstack from '@contentstack/delivery-sdk';
-
-// The Contentstack stack only has "en-us" configured as a locale, while the
-// site's routes use next-intl codes ("en", "es", ...) - map between them here.
-const CONTENTSTACK_LOCALES = {
-  en: 'en-us',
-};
-
-function resolveLocale(locale) {
-  return CONTENTSTACK_LOCALES[locale] || locale || 'en-us';
-}
+import { resolveContentstackLocale as resolveLocale } from './locale';
 
 function deserializeVariantIds (variantsQueryParam) {
   if(!variantsQueryParam) return '';
