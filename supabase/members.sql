@@ -8,6 +8,39 @@
 --   alter table public.members drop column full_name;
 --   alter table public.members alter column first_name set not null;
 --   alter table public.members alter column last_name set not null;
+--
+-- If you already ran an earlier version with 'junior' instead of 'youth' as
+-- a membership_type value, run this to update the constraint (if no rows
+-- use 'junior' yet - check first with:
+--   select id from public.members where membership_type = 'junior';
+-- and update any that exist before dropping the old constraint):
+--   alter table public.members drop constraint members_membership_type_check;
+--   alter table public.members add constraint members_membership_type_check
+--     check (membership_type in ('single_adult', 'youth', 'family'));
+--
+-- If you already ran an earlier version without the Breeders Directory /
+-- Communication Agreement columns, run this to add them:
+--   alter table public.members
+--     add column if not exists directory_opt_in boolean not null default false,
+--     add column if not exists directory_farm_name text,
+--     add column if not exists directory_city_state text,
+--     add column if not exists directory_email text,
+--     add column if not exists directory_phone text,
+--     add column if not exists directory_website text,
+--     add column if not exists directory_contact_methods text[] not null default '{}',
+--     add column if not exists directory_colors text[] not null default '{}',
+--     add column if not exists directory_colors_other text,
+--     add column if not exists directory_offers text[] not null default '{}',
+--     add column if not exists directory_delivery_options text[] not null default '{}',
+--     add column if not exists directory_delivery_other text,
+--     add column if not exists directory_focus text[] not null default '{}',
+--     add column if not exists directory_notes text,
+--     add column if not exists communication_opt_in boolean not null default false;
+--
+-- If you already ran an earlier version without the Code of Conduct
+-- agreement column, run this to add it:
+--   alter table public.members
+--     add column if not exists code_of_conduct_agreed boolean not null default false;
 
 create table if not exists public.members (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -21,13 +54,29 @@ create table if not exists public.members (
   phone text,
   email text not null,
   website text,
-  membership_type text not null check (membership_type in ('single_adult', 'junior', 'family')),
+  membership_type text not null check (membership_type in ('single_adult', 'youth', 'family')),
   owns_geese text check (owns_geese in ('yes', 'no', 'planning')),
   primary_interests text[] not null default '{}',
   primary_interest_other text,
   poultry_orgs text[] not null default '{}',
   poultry_org_other text,
   participation_interests text[] not null default '{}',
+  directory_opt_in boolean not null default false,
+  directory_farm_name text,
+  directory_city_state text,
+  directory_email text,
+  directory_phone text,
+  directory_website text,
+  directory_contact_methods text[] not null default '{}',
+  directory_colors text[] not null default '{}',
+  directory_colors_other text,
+  directory_offers text[] not null default '{}',
+  directory_delivery_options text[] not null default '{}',
+  directory_delivery_other text,
+  directory_focus text[] not null default '{}',
+  directory_notes text,
+  communication_opt_in boolean not null default false,
+  code_of_conduct_agreed boolean not null default false,
   payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'waived')),
   created_at timestamptz not null default now()
 );

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const MEMBERSHIP_TYPES = ["single_adult", "junior", "family"];
+const MEMBERSHIP_TYPES = ["single_adult", "youth", "family"];
 
 export async function POST(request) {
   const body = await request.json();
@@ -25,6 +25,22 @@ export async function POST(request) {
     poultryOrgs,
     poultryOrgOther,
     participationInterests,
+    directoryOptIn,
+    directoryFarmName,
+    directoryCityState,
+    directoryEmail,
+    directoryPhone,
+    directoryWebsite,
+    directoryContactMethods,
+    directoryColors,
+    directoryColorsOther,
+    directoryOffers,
+    directoryDeliveryOptions,
+    directoryDeliveryOther,
+    directoryFocus,
+    directoryNotes,
+    communicationOptIn,
+    codeOfConductAgreed,
   } = body;
 
   if (!email || !password || !firstName || !lastName) {
@@ -36,6 +52,12 @@ export async function POST(request) {
   if (!Array.isArray(primaryInterests) || primaryInterests.length === 0) {
     return NextResponse.json(
       { error: "Please select at least one primary interest." },
+      { status: 400 },
+    );
+  }
+  if (!codeOfConductAgreed) {
+    return NextResponse.json(
+      { error: "Please agree to the Code of Conduct policies to continue." },
       { status: 400 },
     );
   }
@@ -84,6 +106,22 @@ export async function POST(request) {
     poultry_orgs: poultryOrgs || [],
     poultry_org_other: poultryOrgOther || null,
     participation_interests: participationInterests || [],
+    directory_opt_in: directoryOptIn === "yes",
+    directory_farm_name: directoryFarmName || null,
+    directory_city_state: directoryCityState || null,
+    directory_email: directoryEmail || null,
+    directory_phone: directoryPhone || null,
+    directory_website: directoryWebsite || null,
+    directory_contact_methods: directoryContactMethods || [],
+    directory_colors: directoryColors || [],
+    directory_colors_other: directoryColorsOther || null,
+    directory_offers: directoryOffers || [],
+    directory_delivery_options: directoryDeliveryOptions || [],
+    directory_delivery_other: directoryDeliveryOther || null,
+    directory_focus: directoryFocus || [],
+    directory_notes: directoryNotes || null,
+    communication_opt_in: Boolean(communicationOptIn),
+    code_of_conduct_agreed: Boolean(codeOfConductAgreed),
   });
 
   if (profileError) {

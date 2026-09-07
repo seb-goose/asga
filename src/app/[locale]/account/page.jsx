@@ -8,7 +8,7 @@ export const metadata = {
 
 const MEMBERSHIP_LABELS = {
   single_adult: "Single Adult 18 & Over ($30)",
-  junior: "Junior ($20)",
+  youth: "Youth ($15)",
   family: "Family ($40)",
 };
 

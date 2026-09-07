@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const MEMBERSHIP_TYPES = [
   { value: "single_adult", label: "Single Adult 18 & Over", price: "$30" },
-  { value: "junior", label: "Junior", price: "$20" },
+  { value: "youth", label: "Youth", price: "$15" },
   { value: "family", label: "Family", price: "$40" },
 ];
 
@@ -36,6 +36,31 @@ const PARTICIPATION_INTERESTS = [
   "Website / Social Media",
   "Committees",
   "Not at this time",
+];
+
+const DIRECTORY_CONTACT_METHODS = ["Email", "Phone"];
+
+const SEBASTOPOL_COLORS = [
+  "White",
+  "Buff",
+  "Gray / Grey",
+  "Blue",
+  "Lavender",
+  "Lilac",
+  "Cream",
+  "Saddleback",
+  "Splash",
+];
+
+const OFFER_TYPES = ["Hatching Eggs", "Goslings", "Juveniles", "Adults"];
+
+const DELIVERY_OPTIONS = ["Ships Hatching Eggs", "Ships Live Birds", "Local Pickup Only"];
+
+const BREEDING_FOCUS_OPTIONS = [
+  "Exhibition",
+  "Breeding Stock",
+  "Pet / Hobby Homes",
+  "Multiple / All of the Above",
 ];
 
 const inputClass =
@@ -69,6 +94,22 @@ export default function RegisterForm() {
     poultryOrgs: [],
     poultryOrgOther: "",
     participationInterests: [],
+    directoryOptIn: "",
+    directoryFarmName: "",
+    directoryCityState: "",
+    directoryEmail: "",
+    directoryPhone: "",
+    directoryWebsite: "",
+    directoryContactMethods: [],
+    directoryColors: [],
+    directoryColorsOther: "",
+    directoryOffers: [],
+    directoryDeliveryOptions: [],
+    directoryDeliveryOther: "",
+    directoryFocus: [],
+    directoryNotes: "",
+    communicationOptIn: false,
+    codeOfConductAgreed: false,
   });
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
@@ -77,6 +118,9 @@ export default function RegisterForm() {
 
   const toggleList = (field, value) => () =>
     setForm((prev) => ({ ...prev, [field]: toggleValue(prev[field], value) }));
+
+  const toggleChecked = (field) => (event) =>
+    setForm((prev) => ({ ...prev, [field]: event.target.checked }));
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -92,6 +136,10 @@ export default function RegisterForm() {
     }
     if (form.primaryInterests.length === 0) {
       setError("Please select at least one primary interest.");
+      return;
+    }
+    if (!form.codeOfConductAgreed) {
+      setError("Please agree to the Code of Conduct policies to continue.");
       return;
     }
 
@@ -429,6 +477,270 @@ export default function RegisterForm() {
             </label>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className={sectionHeadingClass}>ASGA Breeders Directory</h2>
+        <p className="text-sm text-heritage-navy">
+          ASGA maintains an optional Breeders Directory to help connect individuals looking for
+          Sebastopol geese with ASGA members who breed and/or offer them.
+        </p>
+        <div>
+          <p className={labelClass}>Would you like to be included in the ASGA Breeders Directory?</p>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-heritage-navy">
+              <input
+                type="radio"
+                name="directoryOptIn"
+                value="yes"
+                checked={form.directoryOptIn === "yes"}
+                onChange={update("directoryOptIn")}
+              />
+              Yes
+            </label>
+            <label className="flex items-center gap-2 text-heritage-navy">
+              <input
+                type="radio"
+                name="directoryOptIn"
+                value="no"
+                checked={form.directoryOptIn === "no"}
+                onChange={update("directoryOptIn")}
+              />
+              No
+            </label>
+          </div>
+        </div>
+
+        {form.directoryOptIn === "yes" && (
+          <div className="space-y-4 border-l-2 border-stone-gray pl-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className={labelClass} htmlFor="directoryFarmName">
+                  Farm / Breeder Name
+                </label>
+                <input
+                  id="directoryFarmName"
+                  className={inputClass}
+                  value={form.directoryFarmName}
+                  onChange={update("directoryFarmName")}
+                />
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="directoryCityState">
+                  City / State
+                </label>
+                <input
+                  id="directoryCityState"
+                  className={inputClass}
+                  value={form.directoryCityState}
+                  onChange={update("directoryCityState")}
+                />
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="directoryEmail">
+                  Email
+                </label>
+                <input
+                  id="directoryEmail"
+                  type="email"
+                  className={inputClass}
+                  value={form.directoryEmail}
+                  onChange={update("directoryEmail")}
+                />
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="directoryPhone">
+                  Phone
+                </label>
+                <input
+                  id="directoryPhone"
+                  type="tel"
+                  className={inputClass}
+                  value={form.directoryPhone}
+                  onChange={update("directoryPhone")}
+                />
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="directoryWebsite">
+                  Website / Social Media
+                </label>
+                <input
+                  id="directoryWebsite"
+                  className={inputClass}
+                  value={form.directoryWebsite}
+                  onChange={update("directoryWebsite")}
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className={labelClass}>Preferred contact method</p>
+              <div className="flex flex-wrap gap-4">
+                {DIRECTORY_CONTACT_METHODS.map((method) => (
+                  <label key={method} className="flex items-center gap-2 text-heritage-navy">
+                    <input
+                      type="checkbox"
+                      checked={form.directoryContactMethods.includes(method)}
+                      onChange={toggleList("directoryContactMethods", method)}
+                    />
+                    {method}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className={labelClass}>Sebastopol Colors / Varieties You Breed</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {SEBASTOPOL_COLORS.map((color) => (
+                  <label key={color} className="flex items-center gap-2 text-heritage-navy">
+                    <input
+                      type="checkbox"
+                      checked={form.directoryColors.includes(color)}
+                      onChange={toggleList("directoryColors", color)}
+                    />
+                    {color}
+                  </label>
+                ))}
+                <label className="flex items-center gap-2 text-heritage-navy">
+                  <input
+                    type="checkbox"
+                    checked={form.directoryColors.includes("Other")}
+                    onChange={toggleList("directoryColors", "Other")}
+                  />
+                  Other:
+                </label>
+                {form.directoryColors.includes("Other") && (
+                  <input
+                    className={inputClass}
+                    placeholder="Please specify"
+                    value={form.directoryColorsOther}
+                    onChange={update("directoryColorsOther")}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className={labelClass}>What You Typically Offer</p>
+              <div className="flex flex-wrap gap-4">
+                {OFFER_TYPES.map((offer) => (
+                  <label key={offer} className="flex items-center gap-2 text-heritage-navy">
+                    <input
+                      type="checkbox"
+                      checked={form.directoryOffers.includes(offer)}
+                      onChange={toggleList("directoryOffers", offer)}
+                    />
+                    {offer}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className={labelClass}>Sales / Delivery Options</p>
+              <div className="flex flex-wrap gap-4">
+                {DELIVERY_OPTIONS.map((option) => (
+                  <label key={option} className="flex items-center gap-2 text-heritage-navy">
+                    <input
+                      type="checkbox"
+                      checked={form.directoryDeliveryOptions.includes(option)}
+                      onChange={toggleList("directoryDeliveryOptions", option)}
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+              <label className={labelClass} htmlFor="directoryDeliveryOther">
+                Other delivery / meeting options
+              </label>
+              <input
+                id="directoryDeliveryOther"
+                className={inputClass}
+                value={form.directoryDeliveryOther}
+                onChange={update("directoryDeliveryOther")}
+              />
+            </div>
+
+            <div>
+              <p className={labelClass}>Breeding / Exhibition Focus</p>
+              <div className="flex flex-wrap gap-4">
+                {BREEDING_FOCUS_OPTIONS.map((focus) => (
+                  <label key={focus} className="flex items-center gap-2 text-heritage-navy">
+                    <input
+                      type="checkbox"
+                      checked={form.directoryFocus.includes(focus)}
+                      onChange={toggleList("directoryFocus", focus)}
+                    />
+                    {focus}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="directoryNotes">
+                Directory Listing Notes - additional information you would like included
+              </label>
+              <textarea
+                id="directoryNotes"
+                rows={3}
+                className={inputClass}
+                value={form.directoryNotes}
+                onChange={update("directoryNotes")}
+              />
+            </div>
+
+            <p className="text-sm text-heritage-navy/70">
+              <strong>Directory Permission:</strong> By selecting Yes above, I give ASGA permission
+              to publish the Breeders Directory information I have provided. I understand that
+              inclusion in the directory does not constitute an endorsement or guarantee by ASGA
+              regarding individual breeders, birds, availability, health, quality, sales, shipping,
+              or transactions.
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <h2 className={sectionHeadingClass}>Communication &amp; Membership Agreement</h2>
+        <label className="flex items-start gap-2 text-heritage-navy">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={form.communicationOptIn}
+            onChange={toggleChecked("communicationOptIn")}
+          />
+          I agree to receive ASGA announcements, newsletters, meeting information, show/meet
+          information, and other association communications by email.
+        </label>
+        <div className="space-y-2 text-sm text-heritage-navy">
+          <p>
+            Members must be aware of the Code of Conduct, and its policies. Bullying and
+            harassment, complaints, grievance procedure, and disciplinary procedure as indicated
+            in this document. Members will use the highest ethical standards and methods in
+            acquiring, handling, breeding, showing, selling, shipping, advertising, care, and
+            keeping of hatching eggs and stock. Members agree to conduct themselves in a
+            respectful and sportsmanlike manner at club functions and online spaces.
+          </p>
+          <p>
+            Actions deemed harmful to the club, breed, or members must be submitted in writing to
+            a member of the Board. Submitted charges shall be reviewed by the Officers and the
+            Board of Directors. With a majority vote conducted by the Board of Directors, the
+            accused member may be suspended for a given time or expelled. All rights of the
+            membership of the Association may be revoked.
+          </p>
+        </div>
+        <label className="flex items-start gap-2 text-heritage-navy">
+          <input
+            type="checkbox"
+            required
+            className="mt-1"
+            checked={form.codeOfConductAgreed}
+            onChange={toggleChecked("codeOfConductAgreed")}
+          />
+          I understand these policies and agree.
+        </label>
       </section>
 
       <button
