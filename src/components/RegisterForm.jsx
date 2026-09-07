@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const MEMBERSHIP_TYPES = [
   { value: "single_adult", label: "Single Adult 18 & Over", price: "$30" },
@@ -148,10 +149,32 @@ export default function RegisterForm() {
     setStatus("submitting");
 
     try {
+      // Sign up from the browser so the PKCE code verifier lands in a
+      // cookie here - it has to be read back from this same browser when
+      // the confirmation link opens /auth/callback later.
+      const supabase = createClient();
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/en/account`,
+        },
+      });
+
+      if (signUpError) {
+        throw new Error(signUpError.message);
+      }
+
+      const userId = signUpData.user?.id;
+      if (!userId) {
+        throw new Error("Sign-up failed. Please try again.");
+      }
+
+      const { password: _password, confirmPassword: _confirmPassword, ...profile } = form;
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...profile, userId }),
       });
       const result = await response.json();
 

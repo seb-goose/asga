@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const MEMBERSHIP_TYPES = ["single_adult", "youth", "family"];
@@ -7,8 +6,8 @@ const MEMBERSHIP_TYPES = ["single_adult", "youth", "family"];
 export async function POST(request) {
   const body = await request.json();
   const {
+    userId,
     email,
-    password,
     firstName,
     lastName,
     farmName,
@@ -45,7 +44,7 @@ export async function POST(request) {
     codeOfConductAgreed,
   } = body;
 
-  if (!email || !password || !firstName || !lastName) {
+  if (!userId || !email || !firstName || !lastName) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
   if (!MEMBERSHIP_TYPES.includes(membershipType)) {
@@ -62,30 +61,6 @@ export async function POST(request) {
       { error: "Please agree to the Code of Conduct policies to continue." },
       { status: 400 },
     );
-  }
-
-  const origin = request.headers.get("origin") || new URL(request.url).origin;
-
-  const supabaseAuth = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  );
-
-  const { data: signUpData, error: signUpError } = await supabaseAuth.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/en/account`,
-    },
-  });
-
-  if (signUpError) {
-    return NextResponse.json({ error: signUpError.message }, { status: 400 });
-  }
-
-  const userId = signUpData.user?.id;
-  if (!userId) {
-    return NextResponse.json({ error: "Sign-up failed. Please try again." }, { status: 500 });
   }
 
   const supabaseAdmin = createAdminClient();
