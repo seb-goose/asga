@@ -96,7 +96,9 @@ export default function RegisterForm() {
     participationInterests: [],
     directoryOptIn: "",
     directoryFarmName: "",
-    directoryCityState: "",
+    directoryCity: "",
+    directoryState: "",
+    directoryZip: "",
     directoryEmail: "",
     directoryPhone: "",
     directoryWebsite: "",
@@ -526,15 +528,39 @@ export default function RegisterForm() {
                 />
               </div>
               <div>
-                <label className={labelClass} htmlFor="directoryCityState">
-                  City / State
+                <label className={labelClass} htmlFor="directoryCity">
+                  City
                 </label>
                 <input
-                  id="directoryCityState"
+                  id="directoryCity"
                   className={inputClass}
-                  value={form.directoryCityState}
-                  onChange={update("directoryCityState")}
+                  value={form.directoryCity}
+                  onChange={update("directoryCity")}
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass} htmlFor="directoryState">
+                    State
+                  </label>
+                  <input
+                    id="directoryState"
+                    className={inputClass}
+                    value={form.directoryState}
+                    onChange={update("directoryState")}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass} htmlFor="directoryZip">
+                    ZIP
+                  </label>
+                  <input
+                    id="directoryZip"
+                    className={inputClass}
+                    value={form.directoryZip}
+                    onChange={update("directoryZip")}
+                  />
+                </div>
               </div>
               <div>
                 <label className={labelClass} htmlFor="directoryEmail">

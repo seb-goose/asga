@@ -41,6 +41,17 @@
 -- agreement column, run this to add it:
 --   alter table public.members
 --     add column if not exists code_of_conduct_agreed boolean not null default false;
+--
+-- If you already ran an earlier version without the directory ZIP column,
+-- run this to add it:
+--   alter table public.members add column if not exists directory_zip text;
+--
+-- If you already ran an earlier version with a combined directory_city_state
+-- column, run this to split it (no rows existed with data in it as of this
+-- change, so this is a straight swap rather than a data migration):
+--   alter table public.members add column if not exists directory_city text;
+--   alter table public.members add column if not exists directory_state text;
+--   alter table public.members drop column if exists directory_city_state;
 
 create table if not exists public.members (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -63,7 +74,9 @@ create table if not exists public.members (
   participation_interests text[] not null default '{}',
   directory_opt_in boolean not null default false,
   directory_farm_name text,
-  directory_city_state text,
+  directory_city text,
+  directory_state text,
+  directory_zip text,
   directory_email text,
   directory_phone text,
   directory_website text,
