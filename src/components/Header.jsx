@@ -11,6 +11,7 @@ const HEADER_REFERENCES = [
   "buttons.page",
   "menu_items.page",
   "menu_items.items.page",
+  "menu_items.items.sub_items.page",
 ];
 
 const pageHref = (page) => page?.[0]?.url || "#";
@@ -269,16 +270,39 @@ export default function Header({ locale }) {
                 </Link>
                 {hasChildren && (
                   <ul className="invisible absolute left-0 top-full z-20 min-w-[220px] bg-classic-navy py-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
-                    {item.items.map((child, childIndex) => (
-                      <li key={child._metadata?.uid ?? childIndex}>
-                        <Link
-                          href={pageHref(child.page)}
-                          className="block px-5 py-2.5 text-sm text-warm-cream hover:bg-heritage-navy"
+                    {item.items.map((child, childIndex) => {
+                      const hasGrandchildren = child.sub_items && child.sub_items.length > 0;
+                      return (
+                        <li
+                          key={child._metadata?.uid ?? childIndex}
+                          className={hasGrandchildren ? "group/child relative" : undefined}
                         >
-                          {child.text}
-                        </Link>
-                      </li>
-                    ))}
+                          <Link
+                            href={pageHref(child.page)}
+                            className="flex items-center justify-between gap-1 px-5 py-2.5 text-sm text-warm-cream hover:bg-heritage-navy"
+                          >
+                            {child.text}
+                            {hasGrandchildren && (
+                              <ChevronDownIcon className="h-3 w-3 -rotate-90 opacity-80" />
+                            )}
+                          </Link>
+                          {hasGrandchildren && (
+                            <ul className="invisible absolute left-full top-0 z-20 min-w-[220px] bg-classic-navy py-2 opacity-0 shadow-lg transition group-hover/child:visible group-hover/child:opacity-100">
+                              {child.sub_items.map((grandchild, grandchildIndex) => (
+                                <li key={grandchild._metadata?.uid ?? grandchildIndex}>
+                                  <Link
+                                    href={pageHref(grandchild.page)}
+                                    className="block px-5 py-2.5 text-sm text-warm-cream hover:bg-heritage-navy"
+                                  >
+                                    {grandchild.text}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </li>
@@ -315,17 +339,42 @@ export default function Header({ locale }) {
                       <ChevronDownIcon className="h-3 w-3 opacity-80 group-open/details:rotate-180" />
                     </summary>
                     <ul className="bg-classic-navy pb-2">
-                      {item.items.map((child, childIndex) => (
-                        <li key={child._metadata?.uid ?? childIndex}>
-                          <Link
-                            href={pageHref(child.page)}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="block px-9 py-2.5 text-sm text-warm-cream hover:text-heritage-gold"
-                          >
-                            {child.text}
-                          </Link>
-                        </li>
-                      ))}
+                      {item.items.map((child, childIndex) => {
+                        const hasGrandchildren = child.sub_items && child.sub_items.length > 0;
+                        return hasGrandchildren ? (
+                          <li key={child._metadata?.uid ?? childIndex}>
+                            <details className="group/subdetails">
+                              <summary className="flex cursor-pointer list-none items-center justify-between px-9 py-2.5 text-sm text-warm-cream">
+                                {child.text}
+                                <ChevronDownIcon className="h-3 w-3 opacity-80 group-open/subdetails:rotate-180" />
+                              </summary>
+                              <ul className="bg-heritage-navy pb-1">
+                                {child.sub_items.map((grandchild, grandchildIndex) => (
+                                  <li key={grandchild._metadata?.uid ?? grandchildIndex}>
+                                    <Link
+                                      href={pageHref(grandchild.page)}
+                                      onClick={() => setMobileMenuOpen(false)}
+                                      className="block px-12 py-2 text-sm text-warm-cream hover:text-heritage-gold"
+                                    >
+                                      {grandchild.text}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          </li>
+                        ) : (
+                          <li key={child._metadata?.uid ?? childIndex}>
+                            <Link
+                              href={pageHref(child.page)}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="block px-9 py-2.5 text-sm text-warm-cream hover:text-heritage-gold"
+                            >
+                              {child.text}
+                            </Link>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </details>
                 </li>
