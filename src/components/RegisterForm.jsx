@@ -157,7 +157,7 @@ export default function RegisterForm() {
         email: form.email,
         password: form.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/en/account`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/en/email-verified`,
         },
       });
 
