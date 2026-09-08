@@ -9,6 +9,19 @@ const isFemale = (goose) => goose?.tags?.includes("female");
 const maleUidOf = (rule) => rule.male?.[0]?.uid;
 const femaleUidOf = (rule) => rule.female?.[0]?.uid;
 
+function offspringColsClass(count) {
+  switch (count) {
+    case 1:
+      return "grid-cols-1";
+    case 2:
+      return "grid-cols-2";
+    case 3:
+      return "grid-cols-3";
+    default:
+      return "grid-cols-2 sm:grid-cols-4";
+  }
+}
+
 function validMatesFor(rules, sex, uid) {
   const getSelf = sex === "male" ? maleUidOf : femaleUidOf;
   const getMate = sex === "male" ? femaleUidOf : maleUidOf;
@@ -42,7 +55,7 @@ function GooseSelect({ label, options, selected, onSelect }) {
         {selected?.image?.url ? (
           <Image
             src={selected.image.url}
-            alt={selected.title}
+            alt=""
             width={48}
             height={48}
             className="h-12 w-12 rounded-full object-cover"
@@ -68,6 +81,21 @@ function GooseSelect({ label, options, selected, onSelect }) {
           role="listbox"
           className="absolute top-full right-0 left-0 z-20 mt-2 max-h-72 overflow-y-auto border border-stone-gray bg-white shadow-lg"
         >
+          <button
+            type="button"
+            role="option"
+            aria-selected={!selected}
+            onClick={() => {
+              onSelect(null);
+              setOpen(false);
+            }}
+            className={`flex w-full items-center gap-3 px-4 py-2 text-left italic hover:bg-warm-cream ${
+              !selected ? "bg-warm-cream" : ""
+            }`}
+          >
+            <span className="h-9 w-9 shrink-0 rounded-full border border-dashed border-stone-gray" />
+            <span className="text-sm text-heritage-navy/60">None</span>
+          </button>
           {options.length === 0 && (
             <p className="px-4 py-3 text-sm text-heritage-navy/60">No matching geese</p>
           )}
@@ -88,7 +116,7 @@ function GooseSelect({ label, options, selected, onSelect }) {
               {goose.image?.url && (
                 <Image
                   src={goose.image.url}
-                  alt={goose.title}
+                  alt=""
                   width={36}
                   height={36}
                   className="h-9 w-9 rounded-full object-cover"
@@ -119,14 +147,14 @@ export default function ColorCalculator({ geese = [], rules = [] }) {
 
   const handleSelectMale = (goose) => {
     setSelectedMale(goose);
-    if (selectedFemale && !validMatesFor(rules, "male", goose.uid).has(selectedFemale.uid)) {
+    if (goose && selectedFemale && !validMatesFor(rules, "male", goose.uid).has(selectedFemale.uid)) {
       setSelectedFemale(null);
     }
   };
 
   const handleSelectFemale = (goose) => {
     setSelectedFemale(goose);
-    if (selectedMale && !validMatesFor(rules, "female", goose.uid).has(selectedMale.uid)) {
+    if (goose && selectedMale && !validMatesFor(rules, "female", goose.uid).has(selectedMale.uid)) {
       setSelectedMale(null);
     }
   };
@@ -163,7 +191,7 @@ export default function ColorCalculator({ geese = [], rules = [] }) {
         {selectedMale && selectedFemale && (
           <div className="mt-10">
             {offspring.length > 0 ? (
-              <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+              <div className={`mx-auto grid w-fit gap-8 ${offspringColsClass(offspring.length)}`}>
                 {offspring.map((child) => (
                   <div key={child.uid} className="flex flex-col items-center text-center">
                     {child.image?.url && (
