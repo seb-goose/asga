@@ -31,6 +31,7 @@ export default function Footer({ locale }) {
         locale,
         FOOTER_REFERENCES,
         null,
+        ["url"],
       );
       setEntry(data?.[0] ?? null);
     };

@@ -9,6 +9,19 @@ function deserializeVariantIds (variantsQueryParam) {
       .join(',')
 }
 
+// Scopes resolved reference entries down to just the given fields (e.g. ['url']),
+// so a referenced page's own body content isn't pulled into the response.
+function onlyReferenceParams(references, onlyReferenceFields) {
+  if (!onlyReferenceFields?.length) return {};
+  const params = {};
+  references.forEach((ref) => {
+    onlyReferenceFields.forEach((field, i) => {
+      params[`only[${ref}][${i}]`] = field;
+    });
+  });
+  return params;
+}
+
 const stack = contentstack.stack({
   apiKey: process.env.CONTENTSTACK_API_KEY,  
   deliveryToken: process.env.CONTENTSTACK_DELIVERY_TOKEN,
@@ -160,7 +173,7 @@ const ContentstackServer = {
     });
   },
 
-  getElementByTypeWithRefs(type, locale, references, live_preview, variantParam) {
+  getElementByTypeWithRefs(type, locale, references, live_preview, variantParam, onlyReferenceFields) {
    stack.livePreviewQuery(live_preview ?? {});
     return new Promise((resolve, reject) => {
       stack.contentType(type)
@@ -170,6 +183,7 @@ const ContentstackServer = {
         .includeFallback(true)
         .variants(deserializeVariantIds(variantParam))
         .addParams({ "include_applied_variants": "true" })
+        .addParams(onlyReferenceParams(references, onlyReferenceFields))
         .find()
         .then(
           function success(data) {

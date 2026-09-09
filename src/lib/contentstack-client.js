@@ -210,7 +210,7 @@ export const ContentstackClient = {
         return data;
     },
 
-    getElementByTypeWithRefs: async function (type, locale, references, initialData) {
+    getElementByTypeWithRefs: async function (type, locale, references, initialData, onlyReferenceFields) {
         const searchQueryParams = getSearchQueryParams();
         if (inLivePreview() && !(searchQueryParams.live_preview || searchQueryParams.hash)) {
             while (!Stack.live_preview?.hash) {
@@ -224,7 +224,7 @@ export const ContentstackClient = {
             const res = await fetch(`/api/contentstack/getElementByTypeWithRefs`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, locale, references, live_preview: (searchQueryParams.live_preview || searchQueryParams.hash) ? searchQueryParams : (Stack.live_preview.hash) ? Stack.live_preview : null })
+                body: JSON.stringify({ type, locale, references, onlyReferenceFields, live_preview: (searchQueryParams.live_preview || searchQueryParams.hash) ? searchQueryParams : (Stack.live_preview.hash) ? Stack.live_preview : null })
             });
             if(res.ok) {
                 data = await res.json();

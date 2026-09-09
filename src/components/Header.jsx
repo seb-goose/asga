@@ -14,7 +14,17 @@ const HEADER_REFERENCES = [
   "menu_items.items.sub_items.page",
 ];
 
-const pageHref = (page) => page?.[0]?.url || "#";
+// Stub content types exist only so editors can assign a link in the CMS;
+// they have no fields of their own, so their route is hardcoded here.
+const STUB_CONTENT_TYPE_ROUTES = {
+  registration_page: "/register",
+};
+
+const pageHref = (page) => {
+  const ref = page?.[0];
+  if (!ref) return "#";
+  return STUB_CONTENT_TYPE_ROUTES[ref._content_type_uid] || ref.url || "#";
+};
 
 const toSocialHref = (url) => {
   if (!url) return null;
@@ -38,6 +48,7 @@ export default function Header({ locale }) {
         locale,
         HEADER_REFERENCES,
         null,
+        ["url"],
       );
       setEntry(data?.[0] ?? null);
     };

@@ -31,6 +31,7 @@ export default function Home({ params }) {
         locale,
         HOMEPAGE_REFERENCES,
         null,
+        ["url"],
       );
       setEntry(data?.[0] ?? null);
     };
