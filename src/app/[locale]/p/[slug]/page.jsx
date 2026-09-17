@@ -5,6 +5,7 @@ import { ContentstackClient } from "@/lib/contentstack-client";
 import ImageBlock from "@/components/ImageBlock";
 import RichTextBlock from "@/components/RichTextBlock";
 import ColorCalculator from "@/components/ColorCalculator";
+import DocumentLinkBlock from "@/components/DocumentLinkBlock";
 
 const PAGE_REFERENCES = [
   "modular_blocks.color_chart.color_chart",
@@ -51,6 +52,8 @@ export default function Page({ params }) {
             return <ImageBlock key={key} data={blockData} />;
           case "rich_text":
             return <RichTextBlock key={key} data={blockData} />;
+          case "document_link":
+            return <DocumentLinkBlock key={key} data={blockData} />;
           case "color_chart":
             return (
               <ColorCalculator

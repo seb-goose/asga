@@ -12,7 +12,7 @@ export default function RichTextBlock({ data }) {
         [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:pl-6
         [&_ol]:mt-4 [&_ol]:list-decimal [&_ol]:pl-6
         [&_li]:mt-1
-        [&_a]:text-heritage-teal [&_a]:underline
+        [&_a]:cursor-pointer [&_a]:text-heritage-teal [&_a]:underline
         [&_blockquote]:mt-4 [&_blockquote]:border-l-4 [&_blockquote]:border-heritage-gold [&_blockquote]:pl-4 [&_blockquote]:italic
         [&_pre]:mt-4 [&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-stone-gray/20 [&_pre]:p-4
         [&_code]:rounded [&_code]:bg-stone-gray/20 [&_code]:px-1
