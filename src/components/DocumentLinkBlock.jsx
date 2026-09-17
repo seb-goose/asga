@@ -1,12 +1,11 @@
 export default function DocumentLinkBlock({ data }) {
-  const link = data?.link;
-  if (!link?.href) return null;
+  const file = data?.file;
+  if (!file?.url) return null;
 
   return (
     <div className="font-body mx-auto max-w-5xl px-6 py-4">
       <a
-        {...data.$?.link}
-        href={link.href}
+        href={file.url}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex cursor-pointer items-center gap-2 font-heading text-lg text-heritage-teal underline underline-offset-2 hover:text-heritage-navy"
@@ -26,7 +25,7 @@ export default function DocumentLinkBlock({ data }) {
           />
           <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6" />
         </svg>
-        {link.title}
+        <span {...data.$?.title}>{data.title || file.title}</span>
       </a>
     </div>
   );
