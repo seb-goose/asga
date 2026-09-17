@@ -5,9 +5,16 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const MEMBERSHIP_TYPES = [
-  { value: "single_adult", label: "Single Adult 18 & Over", price: "$30" },
-  { value: "youth", label: "Youth", price: "$15" },
-  { value: "family", label: "Family", price: "$40" },
+  {
+    value: "2026_registration",
+    label: "2026 Registration, valid through Dec 31, 2026",
+    price: "$10",
+  },
+];
+
+const RENEWAL_PLAN_TYPES = [
+  { value: "single", label: "Single Membership", price: "$30" },
+  { value: "family", label: "Family Membership (including 17 & under)", price: "$40" },
 ];
 
 const OWNS_GEESE_OPTIONS = [
@@ -88,7 +95,8 @@ export default function RegisterForm() {
     zip: "",
     phone: "",
     website: "",
-    membershipType: "",
+    membershipType: MEMBERSHIP_TYPES[0].value,
+    renewalPlan: "",
     ownsGeese: "",
     primaryInterests: [],
     primaryInterestOther: "",
@@ -135,6 +143,10 @@ export default function RegisterForm() {
     }
     if (!form.membershipType) {
       setError("Please select a membership type.");
+      return;
+    }
+    if (!form.renewalPlan) {
+      setError("Please select a renewal plan for 2027.");
       return;
     }
     if (form.primaryInterests.length === 0) {
@@ -392,14 +404,38 @@ export default function RegisterForm() {
                 type="radio"
                 name="membershipType"
                 value={option.value}
-                checked={form.membershipType === option.value}
-                onChange={update("membershipType")}
+                checked
+                readOnly
                 required
               />
-              {option.label}: {option.price}
+              {option.label}: <span className="ml-1 font-semibold">{option.price}</span>
             </label>
           ))}
         </div>
+        <div>
+          <p className={labelClass}>
+            Starting Jan 1, 2027, your membership will automatically renew into one of the
+            following plans. Please select one:
+          </p>
+          <div className="space-y-2">
+            {RENEWAL_PLAN_TYPES.map((option) => (
+              <label key={option.value} className="flex items-center gap-2 text-heritage-navy">
+                <input
+                  type="radio"
+                  name="renewalPlan"
+                  value={option.value}
+                  checked={form.renewalPlan === option.value}
+                  onChange={update("renewalPlan")}
+                  required
+                />
+                {option.label}: <span className="ml-1 font-semibold">{option.price}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <p className="text-sm text-heritage-navy/70">
+          You may cancel your membership at any time.
+        </p>
       </section>
 
       <section className="space-y-4">
