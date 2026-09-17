@@ -25,7 +25,7 @@ const getLocaleForURL = () => {
 
 let ContentstackLivePreview = null;
 
-if (process.env.LIVE_PREVIEW_ENABLED === "true") {
+if (inLivePreview()) {
 //dynamic import for live preview if in live preview
 const LivePreviewModule = await import('@contentstack/live-preview-utils');
 ContentstackLivePreview = LivePreviewModule.default;
