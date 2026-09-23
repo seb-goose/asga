@@ -46,12 +46,60 @@
 -- run this to add it:
 --   alter table public.members add column if not exists directory_zip text;
 --
+-- If you already ran an earlier version with the old membership_type
+-- values ('single_adult', 'youth', 'family') instead of the flat 2026
+-- registration fee, and without the renewal plan / PayPal columns, run
+-- this. The old constraint is dropped before the data migration, since
+-- it would otherwise reject the new membership_type value as each row is
+-- updated - it's re-added (tightened) only once every row conforms:
+--   alter table public.members add column if not exists renewal_plan text;
+--   alter table public.members add column if not exists paypal_order_id text unique;
+--   alter table public.members add column if not exists paypal_capture_id text;
+--
+--   alter table public.members drop constraint members_membership_type_check;
+--
+--   update public.members
+--   set renewal_plan = case membership_type
+--     when 'single_adult' then 'single'
+--     when 'family' then 'family'
+--     when 'youth' then 'junior'
+--     else renewal_plan
+--   end
+--   where membership_type in ('single_adult', 'family', 'youth');
+--
+--   update public.members
+--   set membership_type = '2026_registration'
+--   where membership_type <> '2026_registration';
+--
+--   alter table public.members add constraint members_membership_type_check
+--     check (membership_type in ('2026_registration'));
+--   alter table public.members add constraint members_renewal_plan_check
+--     check (renewal_plan in ('single', 'family', 'junior'));
+--
 -- If you already ran an earlier version with a combined directory_city_state
 -- column, run this to split it (no rows existed with data in it as of this
 -- change, so this is a straight swap rather than a data migration):
 --   alter table public.members add column if not exists directory_city text;
 --   alter table public.members add column if not exists directory_state text;
 --   alter table public.members drop column if exists directory_city_state;
+--
+-- If you already ran an earlier version with the flat '2026_registration'
+-- membership_type + separate renewal_plan (the $10-now/pay-later-in-2027
+-- model), run this to switch back to paying the real tier price up front
+-- (members joining late in the year get the rest of it free, valid through
+-- Dec 31 of the following year). The old constraint is dropped before the
+-- data migration for the same reason as above - it would otherwise reject
+-- the row as membership_type is updated to its final tier value:
+--   alter table public.members drop constraint members_membership_type_check;
+--
+--   update public.members
+--   set membership_type = coalesce(renewal_plan, membership_type)
+--   where renewal_plan is not null;
+--
+--   alter table public.members add constraint members_membership_type_check
+--     check (membership_type in ('single', 'family', 'junior'));
+--   alter table public.members drop constraint if exists members_renewal_plan_check;
+--   alter table public.members drop column if exists renewal_plan;
 
 create table if not exists public.members (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -65,7 +113,7 @@ create table if not exists public.members (
   phone text,
   email text not null,
   website text,
-  membership_type text not null check (membership_type in ('single_adult', 'youth', 'family')),
+  membership_type text not null check (membership_type in ('single', 'family', 'junior')),
   owns_geese text check (owns_geese in ('yes', 'no', 'planning')),
   primary_interests text[] not null default '{}',
   primary_interest_other text,
@@ -91,6 +139,8 @@ create table if not exists public.members (
   communication_opt_in boolean not null default false,
   code_of_conduct_agreed boolean not null default false,
   payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'waived')),
+  paypal_order_id text unique,
+  paypal_capture_id text,
   created_at timestamptz not null default now()
 );
 

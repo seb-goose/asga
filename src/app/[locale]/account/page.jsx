@@ -7,13 +7,13 @@ export const metadata = {
 };
 
 const MEMBERSHIP_LABELS = {
-  single_adult: "Single Adult 18 & Over ($30)",
-  youth: "Youth ($15)",
-  family: "Family ($40)",
+  single: "Single Membership ($30)",
+  family: "Family Membership ($40)",
+  junior: "Junior Membership ($15)",
 };
 
 const PAYMENT_LABELS = {
-  pending: "Pending - payment collection isn't set up yet",
+  pending: "Pending",
   paid: "Paid",
   waived: "Waived",
 };

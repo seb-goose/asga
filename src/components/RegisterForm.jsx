@@ -1,21 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import PayPalRegistrationButton from "@/components/PayPalRegistrationButton";
 
 const MEMBERSHIP_TYPES = [
-  {
-    value: "2026_registration",
-    label: "2026 Registration, valid through Dec 31, 2026",
-    price: "$10",
-  },
-];
-
-const RENEWAL_PLAN_TYPES = [
   { value: "single", label: "Single Membership", price: "$30" },
   { value: "family", label: "Family Membership (including 17 & under)", price: "$40" },
+  { value: "junior", label: "Junior Membership (17 & under)", price: "$15" },
 ];
+
+const MEMBERSHIP_PRICES = { single: "$30", family: "$40", junior: "$15" };
 
 const OWNS_GEESE_OPTIONS = [
   { value: "yes", label: "Yes" },
@@ -95,8 +91,7 @@ export default function RegisterForm() {
     zip: "",
     phone: "",
     website: "",
-    membershipType: MEMBERSHIP_TYPES[0].value,
-    renewalPlan: "",
+    membershipType: "",
     ownsGeese: "",
     primaryInterests: [],
     primaryInterestOther: "",
@@ -133,7 +128,7 @@ export default function RegisterForm() {
   const toggleChecked = (field) => (event) =>
     setForm((prev) => ({ ...prev, [field]: event.target.checked }));
 
-  const handleSubmit = async (event) => {
+  const handleContinueToPayment = (event) => {
     event.preventDefault();
     setError(null);
 
@@ -145,10 +140,6 @@ export default function RegisterForm() {
       setError("Please select a membership type.");
       return;
     }
-    if (!form.renewalPlan) {
-      setError("Please select a renewal plan for 2027.");
-      return;
-    }
     if (form.primaryInterests.length === 0) {
       setError("Please select at least one primary interest.");
       return;
@@ -158,48 +149,101 @@ export default function RegisterForm() {
       return;
     }
 
-    setStatus("submitting");
-
-    try {
-      // Sign up from the browser so the PKCE code verifier lands in a
-      // cookie here - it has to be read back from this same browser when
-      // the confirmation link opens /auth/callback later.
-      const supabase = createClient();
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/en/email-verified`,
-        },
-      });
-
-      if (signUpError) {
-        throw new Error(signUpError.message);
-      }
-
-      const userId = signUpData.user?.id;
-      if (!userId) {
-        throw new Error("Sign-up failed. Please try again.");
-      }
-
-      const { password: _password, confirmPassword: _confirmPassword, ...profile } = form;
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, userId }),
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Registration failed. Please try again.");
-      }
-
-      setStatus("success");
-    } catch (err) {
-      setError(err.message);
-      setStatus("idle");
-    }
+    setStatus("payment");
   };
+
+  // Runs only after PayPal reports the membership fee as captured - the
+  // account is created after payment, not before, so nobody ends up with
+  // an unpaid account waiting on a manual follow-up.
+  const completeRegistration = useCallback(
+    async (paypalOrderId) => {
+      setError(null);
+      setStatus("submitting");
+
+      try {
+        // Sign up from the browser so the PKCE code verifier lands in a
+        // cookie here - it has to be read back from this same browser when
+        // the confirmation link opens /auth/callback later.
+        const supabase = createClient();
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/en/email-verified`,
+          },
+        });
+
+        if (signUpError) {
+          throw new Error(signUpError.message);
+        }
+
+        const userId = signUpData.user?.id;
+        if (!userId) {
+          throw new Error("Sign-up failed. Please try again.");
+        }
+
+        const { password: _password, confirmPassword: _confirmPassword, ...profile } = form;
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...profile, userId, paypalOrderId }),
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Registration failed. Please try again.");
+        }
+
+        setStatus("success");
+      } catch (err) {
+        setError(err.message);
+        setStatus("payment");
+      }
+    },
+    [form],
+  );
+
+  const handlePaymentError = useCallback((message) => {
+    setError(message);
+  }, []);
+
+  if (status === "payment" || status === "submitting") {
+    return (
+      <div className="mx-auto max-w-md px-6 py-16 text-center">
+        <h1 className="font-heading text-2xl font-semibold text-heritage-navy">
+          Pay Your {MEMBERSHIP_PRICES[form.membershipType]} Membership Fee
+        </h1>
+        <p className="mt-2 text-heritage-navy/80">
+          Your account is created once payment completes.
+        </p>
+        {error && (
+          <p className="mt-4 border border-red-400 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </p>
+        )}
+        <div className="mt-6">
+          {status === "submitting" ? (
+            <p className="text-heritage-navy">Finishing up your registration...</p>
+          ) : (
+            <PayPalRegistrationButton
+              membershipType={form.membershipType}
+              onPaid={completeRegistration}
+              onError={handlePaymentError}
+            />
+          )}
+        </div>
+        {status === "payment" && (
+          <button
+            type="button"
+            onClick={() => setStatus("idle")}
+            className="mt-6 text-sm text-heritage-teal underline"
+          >
+            Back to application
+          </button>
+        )}
+      </div>
+    );
+  }
 
   if (status === "success") {
     return (
@@ -216,15 +260,15 @@ export default function RegisterForm() {
           .
         </p>
         <p className="mt-4 text-sm text-heritage-navy/70">
-          Membership fee payment isn&apos;t collected yet - we&apos;ll follow up separately once
-          that&apos;s ready.
+          Your {MEMBERSHIP_PRICES[form.membershipType]} membership fee has been received. Thank
+          you for joining ASGA!
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-8 px-6 py-12">
+    <form onSubmit={handleContinueToPayment} className="mx-auto max-w-3xl space-y-8 px-6 py-12">
       <div className="text-center">
         <h1 className="font-heading text-3xl font-semibold text-heritage-navy">
           Membership Application
@@ -397,35 +441,17 @@ export default function RegisterForm() {
 
       <section className="space-y-4">
         <h2 className={sectionHeadingClass}>Membership</h2>
-        <div className="space-y-2">
-          {MEMBERSHIP_TYPES.map((option) => (
-            <label key={option.value} className="flex items-center gap-2 text-heritage-navy">
-              <input
-                type="radio"
-                name="membershipType"
-                value={option.value}
-                checked
-                readOnly
-                required
-              />
-              {option.label}: <span className="ml-1 font-semibold">{option.price}</span>
-            </label>
-          ))}
-        </div>
         <div>
-          <p className={labelClass}>
-            Starting Jan 1, 2027, your membership will automatically renew into one of the
-            following plans. Please select one:
-          </p>
+          <p className={labelClass}>Please select your membership type:</p>
           <div className="space-y-2">
-            {RENEWAL_PLAN_TYPES.map((option) => (
+            {MEMBERSHIP_TYPES.map((option) => (
               <label key={option.value} className="flex items-center gap-2 text-heritage-navy">
                 <input
                   type="radio"
-                  name="renewalPlan"
+                  name="membershipType"
                   value={option.value}
-                  checked={form.renewalPlan === option.value}
-                  onChange={update("renewalPlan")}
+                  checked={form.membershipType === option.value}
+                  onChange={update("membershipType")}
                   required
                 />
                 {option.label}: <span className="ml-1 font-semibold">{option.price}</span>
@@ -434,7 +460,10 @@ export default function RegisterForm() {
           </div>
         </div>
         <p className="text-sm text-heritage-navy/70">
-          You may cancel your membership at any time.
+          Since it&apos;s late in the year, your membership fee covers you through Dec 31, 2027 -
+          the rest of 2026 is included at no extra cost. This isn&apos;t an auto-renewal - we
+          don&apos;t store payment details or charge you automatically. We&apos;ll email you when
+          it&apos;s time to renew and pay for the following year.
         </p>
       </section>
 
@@ -830,10 +859,9 @@ export default function RegisterForm() {
 
       <button
         type="submit"
-        disabled={status === "submitting"}
         className="w-full bg-heritage-gold px-5 py-3 text-sm font-bold tracking-wider text-heritage-navy uppercase hover:opacity-90 disabled:opacity-50"
       >
-        {status === "submitting" ? "Submitting..." : "Submit Application"}
+        Continue to Payment
       </button>
 
       <p className="text-center text-sm text-heritage-navy">
