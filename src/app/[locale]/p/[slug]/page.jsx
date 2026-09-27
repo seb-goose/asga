@@ -6,6 +6,8 @@ import ImageBlock from "@/components/ImageBlock";
 import RichTextBlock from "@/components/RichTextBlock";
 import ColorCalculator from "@/components/ColorCalculator";
 import DocumentLinkBlock from "@/components/DocumentLinkBlock";
+import SectionHeading from "@/components/SectionHeading";
+import CaptionedImage from "@/components/CaptionedImage";
 
 const PAGE_REFERENCES = [
   "modular_blocks.color_chart.color_chart",
@@ -54,6 +56,10 @@ export default function Page({ params }) {
             return <RichTextBlock key={key} data={blockData} />;
           case "document_link":
             return <DocumentLinkBlock key={key} data={blockData} />;
+          case "heading":
+            return <SectionHeading key={key} data={blockData} />;
+          case "captioned_image":
+            return <CaptionedImage key={key} data={blockData} />;
           case "color_chart":
             return (
               <ColorCalculator
