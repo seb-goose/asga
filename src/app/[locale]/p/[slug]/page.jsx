@@ -8,12 +8,14 @@ import ColorCalculator from "@/components/ColorCalculator";
 import DocumentLinkBlock from "@/components/DocumentLinkBlock";
 import SectionHeading from "@/components/SectionHeading";
 import CaptionedImage from "@/components/CaptionedImage";
+import TextAndImage from "@/components/TextAndImage";
 
 const PAGE_REFERENCES = [
   "modular_blocks.color_chart.color_chart",
   "modular_blocks.color_chart.color_chart.rules.male",
   "modular_blocks.color_chart.color_chart.rules.female",
   "modular_blocks.color_chart.color_chart.rules.products.child",
+  "modular_blocks.text_and_image.page",
 ];
 
 export default function Page({ params }) {
@@ -60,6 +62,8 @@ export default function Page({ params }) {
             return <SectionHeading key={key} data={blockData} />;
           case "captioned_image":
             return <CaptionedImage key={key} data={blockData} />;
+          case "text_and_image":
+            return <TextAndImage key={key} data={blockData} />;
           case "color_chart":
             return (
               <ColorCalculator
